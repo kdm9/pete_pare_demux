@@ -1,13 +1,13 @@
+from __future__ import print_function
 from collections import Counter
 import itertools as itl
 import re
 import sys
-import multiprocessing as mp
 
 regex = re.compile(r"(.+)TGGAATTCTCGGGTGCCAAGGAACTCCAGTCAC(......)ATCTCGTA")
 
 def fq(fhandle):
-    for h, s, _, q in zip(fhandle, fhandle, fhandle, fhandle):
+    for h, s, _, q in itl.izip(fhandle, fhandle, fhandle, fhandle):
         #yield (h.strip(), s.strip(), _.strip(), q.strip())
         yield (h, s, _, q)
 
@@ -25,21 +25,19 @@ def match_read(read):
 if __name__ == "__main__":
     ifp = open(sys.argv[1])
     ofps = {}
-    pool = mp.Pool()
     ctr = Counter()
-    for bcd, read in pool.imap(match_read, fq(ifp), 10000):
+    iii = 0
+    for bcd, read in itl.imap(match_read, fq(ifp)):
+        if iii % 10000 == 0:
+            print("Processed {: 7d} reads. Seen {} barcodes".format(
+                iii, len(ctr)), end = '\r')
+        iii += 1
         ctr[bcd] += 1
-        if bcd == "NOBCD":
-            continue
-        else:
-            try:
-                ofp = ofps[bcd]
-            except KeyError:
-                ofp = open(sys.argv[2] % bcd, "w")
-                ofps[bcd] = ofp
-            ofp.write("{}{}{}{}".format(*read))
-    pool.close()
-    pool.join()
+        try:
+            ofp = ofps[bcd]
+        except KeyError:
+            ofp = open(sys.argv[2] % bcd, "w")
+            ofps[bcd] = ofp
+        ofp.write("{}{}{}{}".format(*read))
     for k, v in ctr.most_common():
-        print "{}\t{: 6d}".format(k, v)
-
+        print("{}\t{: 6d}".format(k, v))
