@@ -3,8 +3,9 @@ from collections import Counter
 import itertools as itl
 import re
 import sys
+import multiprocessing as mp
 
-regex = re.compile(r"(.+)TGGAATTCTCGGGTGCCAAGGAACTCCAGTCAC(......)ATCTCGTA")
+regex = re.compile(r"(.+)TGGAATTCTCGGGTGCCAAGGAACTCCAGTCAC(ATCACG|CGATGT|TTAGGC|TGACCA|ACAGTG|GCCAAT|CAGATC|ACTTGA|GATCAG)ATCTCGTA")
 
 def fq(fhandle):
     for h, s, _, q in itl.izip(fhandle, fhandle, fhandle, fhandle):
@@ -27,6 +28,8 @@ if __name__ == "__main__":
     ofps = {}
     ctr = Counter()
     iii = 0
+    #pool = mp.Pool()
+    #for bcd, read in pool.imap(match_read, fq(ifp), 10000):
     for bcd, read in itl.imap(match_read, fq(ifp)):
         if iii % 10000 == 0:
             print("Processed {: 7d} reads. Seen {} barcodes".format(
@@ -39,5 +42,8 @@ if __name__ == "__main__":
             ofp = open(sys.argv[2] % bcd, "w")
             ofps[bcd] = ofp
         ofp.write("{}{}{}{}".format(*read))
+    print("Processed {: 7d} reads. Seen {} barcodes".format(iii, len(ctr)))
+    #pool.close()
+    #pool.join()
     for k, v in ctr.most_common():
         print("{}\t{: 6d}".format(k, v))
