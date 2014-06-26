@@ -18,10 +18,13 @@ def match_read(read):
     if match is None:
         seq = read[1]
         bcd = "NOBCD"
+        qual = read[3]
+
     else:
         seq = match.groups()[0] + "\n"
         bcd = match.groups()[1]
-    return (bcd, (read[0], seq, "+\n", read[3]))
+        qual = read[3][:len(seq)-1] + "\n"
+    return (bcd, (read[0], seq, "+\n", qual))
 
 if __name__ == "__main__":
     ifp = open(sys.argv[1])
